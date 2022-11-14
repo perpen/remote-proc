@@ -1,18 +1,18 @@
 #!/bin/bash
 set -ueo pipefail
 
-DIOD=$HOME/src/chaos-diod
 MNT=/mnt/diod
-EXPORTED=/proc
+REMOTE=localhost
+#REMOTE=archie
 
 srv() {
-    sudo $DIOD/diod/diod -f -d 1 -n -e $EXPORTED
+    sudo diod -f -d 1 -n -e /proc
 }
 
 mnt() {
     sudo mkdir -p $MNT
     sudo umount $MNT || true
-    sudo $DIOD/utils/diodmount -n localhost:$EXPORTED $MNT
+    sudo diodmount -n $REMOTE:/proc $MNT
     ls -F $MNT
 }
 
@@ -23,7 +23,7 @@ run() {
 }
 
 cd "$(dirname $0)"
-[[ ! -e liboverrides.so || overrides.c -nt liboverrides.so ]] && {
+[[ -e liboverrides.so && liboverrides.so -nt overrides.c ]] || {
     echo compiling
     gcc -fPIC -c overrides.c
     gcc -shared -fPIC -Wl,-soname -Wl,liboverrides.so -o liboverrides.so overrides.o

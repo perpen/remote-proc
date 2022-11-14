@@ -7,12 +7,11 @@
 
 typedef int (*open_t)(const char *pathname, int flags, mode_t mode);
 static open_t real_open;
-
-char *proc_mnt;
-int proc_mnt_len;
+static char *proc_mnt;
+static int proc_mnt_len;
 
 int open(const char *pathname, int flags, mode_t mode) {
-  // FIXME safety
+  // FIXME buf overflow
   char tmp[4000];
   if (real_open == NULL) {
     proc_mnt = getenv("REMOTE_PROC_MNT");
