@@ -1,0 +1,31 @@
+#!/bin/bash
+set -ueo pipefail
+
+DIOD=$HOME/src/chaos-diod
+MNT=/mnt/diod
+EXPORTED=/proc
+
+srv() {
+    sudo $DIOD/diod/diod -f -d 1 -n -e $EXPORTED
+}
+
+mnt() {
+    sudo mkdir -p $MNT
+    sudo umount $MNT || true
+    sudo $DIOD/utils/diodmount -n localhost:$EXPORTED $MNT
+    ls -F $MNT
+}
+
+run() {
+    LD_PRELOAD=$(pwd)/liboverrides.so \
+    REMOTE_PROC_MNT=$MNT \
+    "$@"
+}
+
+cd "$(dirname $0)"
+[[ ! -e liboverrides.so || overrides.c -nt liboverrides.so ]] && {
+    echo compiling
+    gcc -fPIC -c overrides.c
+    gcc -shared -fPIC -Wl,-soname -Wl,liboverrides.so -o liboverrides.so overrides.o
+}
+"$@"
